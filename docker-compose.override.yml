@@ -1,0 +1,45 @@
+# aimlab_openrag ↔ cad_beyondkm integration override
+# Attaches OpenRAG services to the shared `beyondkm_shared` network so
+# `openrag-backend` and `langflow` can reach BeyondKM services by hostname
+# (postgres, weaviate, memgraph, redis, azurite).
+#
+# BeyondKM services must also be attached to `beyondkm_shared` — see
+# scripts/bootstrap_integration.sh and INTEGRATION.md.
+
+networks:
+  default:
+    name: aimlab_openrag_default
+  beyondkm_shared:
+    external: true
+
+services:
+  openrag-backend:
+    networks:
+      - default
+      - beyondkm_shared
+    environment:
+      # Optional bridge hints — read by a custom Langflow component at runtime.
+      - BEYONDKM_WEAVIATE_URL=http://weaviate:8080
+      - BEYONDKM_POSTGRES_URL=postgresql+asyncpg://beyondkm:beyondkm_dev@postgres:5432/beyondkm
+      - BEYONDKM_MEMGRAPH_URL=bolt://memgraph:7687
+
+  langflow:
+    networks:
+      - default
+      - beyondkm_shared
+    environment:
+      - BEYONDKM_WEAVIATE_URL=http://weaviate:8080
+      - BEYONDKM_POSTGRES_URL=postgresql+asyncpg://beyondkm:beyondkm_dev@postgres:5432/beyondkm
+      - BEYONDKM_MEMGRAPH_URL=bolt://memgraph:7687
+
+  openrag-frontend:
+    networks:
+      - default
+
+  opensearch:
+    networks:
+      - default
+
+  dashboards:
+    networks:
+      - default
